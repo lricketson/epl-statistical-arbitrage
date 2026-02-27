@@ -1,0 +1,4 @@
+- Make it so recent 5 games have more weight in deciding the outcomes of matches (like calculating xG and xGA)
+- Dixon-Coles adjustment
+- Game state skew (if a team goes 2-0 up in the first 15 min, they'll sit back and defend, and the other team will rack up 'empty' xG)
+- think about how if teams have played a lot of games recently, their players might be tired and therefore perform worse
