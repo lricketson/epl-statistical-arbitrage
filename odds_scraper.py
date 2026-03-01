@@ -2,10 +2,9 @@
 import requests
 
 
-def fetch_live_pinnacle_odds():
-    MY_API_KEY = "a917c51c1e3b704390f0bca7728d3a59"
+def fetch_live_pinnacle_odds(api_key):
     # We specify the EPL, ask for Head-to-Head (h2h) markets, and filter for Pinnacle
-    url = f"https://api.the-odds-api.com/v4/sports/soccer_epl/odds/?apiKey={MY_API_KEY}&regions=eu,uk&markets=h2h&bookmakers=pinnacle"
+    url = f"https://api.the-odds-api.com/v4/sports/soccer_epl/odds/?apiKey={api_key}&regions=eu,uk&markets=h2h&bookmakers=pinnacle"
 
     print("Fetching live Pinnacle odds...")
     response = requests.get(url)
