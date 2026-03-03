@@ -30,17 +30,15 @@ An end-to-end model for identifying bets on the English Premier League that have
 
 ### Tech Stack and Libraries
 
-Language: Python 3.10.6
-Data Scraping & Manipulation: requests, pandas
-Maths and Machine Learning: statsmodels, scipy, scikit-learn
+Language: Python 3.10.6  
+Data Scraping & Manipulation: requests, pandas  
+Maths and Machine Learning: statsmodels, scipy, scikit-learn  
 Compute Environment: Jupyter Notebooks
-
-To use this yourself, get an API key from The-Odds-API and put it in your .env file
 
 1. Clone the repo and install dependencies: `pip install pandas scipy requests statsmodels scikit-learn`
 2. Get a free API key from The-Odds-API
 3. Create a .env file in the root directory and add your key as `ODDS_API_KEY=your_key_here`.
-4. Run the script as `python main.py`
+4. Run the script as `python main.py`  
    _This script will output a timestamped CSV of actionable +EV bets._
 
 ### Limitations
