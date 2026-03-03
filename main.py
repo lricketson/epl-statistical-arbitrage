@@ -9,6 +9,8 @@ from regression_engine import calculate_regression_lambdas, train_poisson_model
 from pricing_model import calculate_match_probabilities, find_value_bets
 from odds_scraper import fetch_live_pinnacle_odds
 
+from config import ODDS_API_KEY
+
 
 def main():
     print("Initializing V5.0 APEX Arbitrage Engine (Pristine ML Edition)...")
@@ -32,7 +34,6 @@ def main():
 
     # --- STAGE 3: LIVE MARKET SCANNER ---
     print("\n--- STAGE 3: MARKET SCANNER ---")
-    ODDS_API_KEY = "a917c51c1e3b704390f0bca7728d3a59"
     upcoming_fixtures = fetch_live_pinnacle_odds(
         ODDS_API_KEY
     )  # gets upcoming fixtures and the odds for each outcome
