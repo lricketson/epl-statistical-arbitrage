@@ -30,10 +30,10 @@ An end-to-end model for identifying bets on the English Premier League that have
 
 ### Tech Stack and Libraries
 
-Language: Python 3.10.6  
-Data Scraping & Manipulation: requests, pandas  
-Maths and Machine Learning: statsmodels, scipy, scikit-learn  
-Compute Environment: Jupyter Notebooks
+**Language**: Python 3.10.6  
+**Data Scraping & Manipulation:** requests, pandas  
+**Maths and Machine Learning:** statsmodels, scipy, scikit-learn  
+**Compute Environment:** Jupyter Notebooks
 
 1. Clone the repo and install dependencies: `pip install pandas scipy requests statsmodels scikit-learn`
 2. Get a free API key from The-Odds-API
