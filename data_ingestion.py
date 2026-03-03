@@ -27,6 +27,9 @@ def find_teams(data_node):
 
 
 def fetch_understat_data():
+    """
+    Accesses a hidden API in Understat to retrieve football team data.
+    """
     import requests
 
     # A session makes sure our python script remembers things we did previously, like getting a cookie
@@ -56,19 +59,24 @@ def fetch_understat_data():
         RuntimeError("We didn't make it in.")
 
 
-import pandas as pd
-
-
 def engineer_rest_differential(understat_log, rest_df):
+    """
+    [Not currently using.] This function takes in the Understat team dataframe and also the rest dataframe (showing how
+    many days of rest each team had) and creates a merged dataframe with a team's days of rest and their opponent's
+    days of rest, then calculates the difference between them.
+    """
+    import pandas as pd
+
     print("Merging Rest Data into Expected Goals log...")
 
-    # --- THE FIX: Align the Data Types ---
     # Convert Understat strings to datetime objects and strip the time (normalize)
     understat_log["Date"] = pd.to_datetime(understat_log["Date"]).dt.normalize()
     # ------------------------------------
 
     # 1. Merge the Primary Team's rest
-    merged = pd.merge(understat_log, rest_df, on=["Team", "Date"], how="left").rename(
+    merged = pd.merge(
+        understat_log, rest_df, on=["Team", "Date"], how="left"
+    ).rename(  # left join because we don't want to keep teams that aren't in understat
         columns={"Rest_Days": "Team_Rest"}
     )
 
@@ -76,15 +84,15 @@ def engineer_rest_differential(understat_log, rest_df):
     merged = pd.merge(
         merged,
         rest_df,
-        left_on=["Opponent", "Date"],
-        right_on=["Team", "Date"],
-        how="left",
+        left_on=["Opponent", "Date"],  # in the left table, find 'opponent'
+        right_on=["Team", "Date"],  # in the right table, find 'team'
+        how="left",  # ^ ...then merge them
         suffixes=("", "_opp"),
     ).rename(columns={"Rest_Days": "Opponent_Rest"})
 
     # Drop the duplicate team column created by the second merge
     if "Team_opp" in merged.columns:
-        merged = merged.drop("Team_opp", axis=1)
+        merged = merged.drop("Team_opp", axis=1)  # we already have 'opponent' in merged
 
     # 3. Fill missing data. Assume fully rested (7 days) if no cup game found.
     merged["Team_Rest"] = merged["Team_Rest"].fillna(7.0)
@@ -109,6 +117,12 @@ def engineer_rest_differential(understat_log, rest_df):
 
 
 def build_regression_log(extracted_teams, target_date, half_life_days=90.0):
+    """
+    Creates a dataframe showing a team's opponents in each match, by finding matches played by two teams on the same date
+    where home xG matches away xGA and vice versa. Also weight the impact of each match on the data with a half-life
+    approach.
+
+    """
     import pandas as pd
     from datetime import datetime
 
@@ -146,11 +160,13 @@ def build_regression_log(extracted_teams, target_date, half_life_days=90.0):
             ]
 
             if not matching_away.empty:
-                away_row = matching_away.iloc[0]
+                away_row = matching_away.iloc[0]  # get the match's away team data
 
                 # Calculate the Exponential Time Decay Weight!
                 match_date = datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
-                days_ago = max(0, (target_date - match_date).days)
+                days_ago = max(
+                    0, (target_date - match_date).days
+                )  # to make sure no funny business with negative days
                 weight = 0.5 ** (days_ago / half_life_days)
 
                 # Append Home Perspective

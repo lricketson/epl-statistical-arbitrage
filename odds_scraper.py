@@ -3,6 +3,10 @@ import requests
 
 
 def fetch_live_pinnacle_odds(api_key):
+    """
+    Scrapes match odds from Pinnacle and uses a name-mapping dictionary to keep team names consistent with Understat.
+    """
+
     # We specify the EPL, ask for Head-to-Head (h2h) markets, and filter for Pinnacle
     url = f"https://api.the-odds-api.com/v4/sports/soccer_epl/odds/?apiKey={api_key}&regions=eu,uk&markets=h2h&bookmakers=pinnacle"
 
@@ -16,9 +20,7 @@ def fetch_live_pinnacle_odds(api_key):
     raw_odds_data = response.json()
     upcoming_fixtures = []
 
-    # A classic Data Science hurdle: APIs rarely spell team names exactly the same way.
-    # We use a dictionary to translate The-Odds-API names into Understat names.
-    # Add to this list if your script catches a spelling mismatch!
+    # Dictionary to translate The-Odds-API names into Understat names.
     name_mapper = {
         # "The-Odds-API Name": "Understat Name"
         # Arsenal all good
@@ -45,15 +47,17 @@ def fetch_live_pinnacle_odds(api_key):
         "West Ham United": "West Ham",
         "Wolves": "Wolverhampton Wanderers",
         # ----- other teams -----
-        "Leicester City": "Leicester",  # Adding this just in case!
+        "Leicester City": "Leicester",  # To keep it robust for next season
     }
 
     for match in raw_odds_data:
         # Get team names, translating them if they are in our mapper
-        home_team = name_mapper.get(match["home_team"], match["home_team"])
+        home_team = name_mapper.get(
+            match["home_team"], match["home_team"]
+        )  # match["home_team"] is a team name. if it's a key in name_mapper, return the corresponding value. else, return that team name
         away_team = name_mapper.get(match["away_team"], match["away_team"])
 
-        # Dig into the JSON to find Pinnacle's H2H market
+        # Dig into The-Odds-API's JSON to find Pinnacle's H2H market
         for bookie in match.get("bookmakers", []):
             if bookie["key"] == "pinnacle":
                 for market in bookie.get("markets", []):

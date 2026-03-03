@@ -8,7 +8,7 @@ def calculate_match_probabilities(home_lambda, away_lambda, max_goals=6, rho=-0.
     from scipy.stats import poisson
     import pandas as pd
 
-    # 1. Create standard Poisson probabilities
+    # 1. Create list of standard Poisson probabilities for each possible number of goals
     goals_range = np.arange(0, max_goals + 1)
     home_probs = poisson.pmf(goals_range, home_lambda)
     away_probs = poisson.pmf(goals_range, away_lambda)
@@ -19,7 +19,7 @@ def calculate_match_probabilities(home_lambda, away_lambda, max_goals=6, rho=-0.
     # 3. Apply the Dixon-Coles Adjustment (The Tau Function)
     # We only adjust the specific low-scoring cells: (0,0), (1,0), (0,1), and (1,1)
 
-    # Calculate Tau multipliers
+    # Calculate Tau multipliers (empirically determined for lower-scoring games)
     tau_00 = 1 - (home_lambda * away_lambda * rho)
     tau_10 = 1 + (home_lambda * rho)
     tau_01 = 1 + (away_lambda * rho)
@@ -32,8 +32,12 @@ def calculate_match_probabilities(home_lambda, away_lambda, max_goals=6, rho=-0.
     prob_matrix[1, 1] *= tau_11
 
     # 4. Sum the matrix sections to get Match Odds
-    home_win_prob = np.sum(np.tril(prob_matrix, -1))
-    draw_prob = np.sum(np.diag(prob_matrix))
+    home_win_prob = np.sum(
+        np.tril(prob_matrix, -1)
+    )  # tril means lower triangle of matrix, so sum up any result where home team scored more goals than away team
+    draw_prob = np.sum(
+        np.diag(prob_matrix)
+    )  # sum the diagonal probabilities (where home and away scored the same number of goals)
     away_win_prob = np.sum(np.triu(prob_matrix, 1))
 
     # Wrap in DataFrame
@@ -61,12 +65,22 @@ def find_value_bets(
     outcomes = {"Home": "Home_Win_Prob", "Draw": "Draw_Prob", "Away": "Away_Win_Prob"}
 
     for outcome, prob_key in outcomes.items():
-        model_prob = match_results[prob_key]
-        model_odds = 1 / model_prob if model_prob > 0 else float("inf")
-        bookie_odds = bookmaker_odds.get(outcome, 0)
+        model_prob = match_results[
+            prob_key
+        ]  # gets the probability from the df returned by calculate_match_probabilities
+        model_odds = (
+            1 / model_prob if model_prob > 0 else float("inf")
+        )  # protect against division by zero
+        bookie_odds = bookmaker_odds.get(
+            outcome, 0
+        )  # get the bookie's odds on the outcome, or if it's not there, get 0
 
         # Calculate Expected Value (EV)
         ev = (model_prob * bookie_odds) - 1
+        # ev = (p * (o - 1)) - ((1 - p) * 1)
+        # ev = (po - p) - (1 - p)
+        # ev = po - p - 1 + p
+        # ev = po - 1
 
         # --- NEW: Kelly Criterion Logic ---
         b = bookie_odds - 1.0

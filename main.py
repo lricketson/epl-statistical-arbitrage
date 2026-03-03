@@ -3,9 +3,9 @@ from datetime import datetime
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 
-# --- YOUR MODULE IMPORTS ---
+# --- MODULE IMPORTS ---
 from data_ingestion import fetch_understat_data, build_regression_log
-from regression_engine import calculate_regression_lambdas
+from regression_engine import calculate_regression_lambdas, train_poisson_model
 from pricing_model import calculate_match_probabilities, find_value_bets
 from odds_scraper import fetch_live_pinnacle_odds
 
@@ -28,23 +28,14 @@ def main():
 
     # --- STAGE 2: MACHINE LEARNING ---
     print("\n--- STAGE 2: TRAINING POISSON GLM ---")
-    # Clean, strictly significant variables.
-    formula = "xG ~ Team + Opponent + Venue"
-
-    trained_model = smf.glm(
-        formula=formula,
-        data=match_log_df,
-        family=sm.families.Poisson(),
-        freq_weights=match_log_df["Weight"],
-    ).fit()
-    print("Model Training Complete. True strength ratings locked.")
+    trained_model = train_poisson_model(match_log_df)
 
     # --- STAGE 3: LIVE MARKET SCANNER ---
     print("\n--- STAGE 3: MARKET SCANNER ---")
-    ODDS_API_KEY = (
-        "a917c51c1e3b704390f0bca7728d3a59"  # Paste your The-Odds-API key here
-    )
-    upcoming_fixtures = fetch_live_pinnacle_odds(ODDS_API_KEY)
+    ODDS_API_KEY = "a917c51c1e3b704390f0bca7728d3a59"
+    upcoming_fixtures = fetch_live_pinnacle_odds(
+        ODDS_API_KEY
+    )  # gets upcoming fixtures and the odds for each outcome
 
     if not upcoming_fixtures:
         print("No live odds found. Exiting.")
@@ -85,6 +76,7 @@ def main():
     # --- STAGE 4: EXPORT ---
     if master_dashboard:
         final_report = pd.concat(master_dashboard, ignore_index=True)
+        # Filter 1: only get bets with a positive EV
         # Use .copy() to prevent the Pandas SettingWithCopy warning!
         actionable_bets = final_report[
             final_report["Bet_Signal"] == "🔥 VALUE (BET)"
@@ -93,7 +85,7 @@ def main():
         actionable_bets = actionable_bets[
             actionable_bets["Edge (EV)"].str.rstrip("%").astype(float) <= 10.0
         ]
-        # Filter 3: The "Best Edge Only" Rule (Prevents Mutually Exclusive Bets)
+        # Filter 3: only take the bet with highest EV from any given match, so no mutually exclusive bets
         actionable_bets = actionable_bets.sort_values(
             "Edge (EV)", key=lambda x: x.str.rstrip("%").astype(float), ascending=False
         ).drop_duplicates(subset=["Fixture"])
