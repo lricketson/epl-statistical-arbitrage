@@ -24,7 +24,7 @@ An end-to-end model for identifying bets on the English Premier League that have
 ### Risk Management
 
 - **Ruin through Variance:** Even with positive EV bets, variance in returns can still cause the loss of a bettor's entire bankroll. An extreme example of this is as follows: a naive bettor is overjoyed to calculate she has a 5% edge in a bet, and eagerly puts her entire bankroll on it. She loses, and her bankroll is wiped out. While the Law of Large Numbers theoretically guarantees positive returns from positive EV bets in the long run, it says nothing of the short run, and a bettor's bankroll is susceptible to huge fluctuations after any given bet.
-- **Kelly Criterion:** To guard against ruin from variance in wins, this model uses the Kelly Criterion, a mathematical formula calculates the optimal wager for long-term wealth growth to put on bets depending on their odds and percentage edge. For further protection against variance, the 'Fractional Kelly' was used, only betting half of what a normal Kelly formula would output.
+- **Kelly Criterion:** To guard against ruin from variance in wins, this model uses the Kelly Criterion, a mathematical formula that calculates the optimal wager for long-term wealth growth to put on bets depending on their odds and percentage edge. For further protection against variance, the 'Fractional Kelly' was used, only betting half of what a normal Kelly formula would output.
 - **EV Ceiling:** A cap on the EV of 10% was put into place to avoid hallucinating huge edges caused by the model missing data on factors like injuries.
 - **Mutually Exclusive:** Where multiple edges were found on bets regarding the same match, only the one with the highest EV% was kept, to ensure bets did not conflict.
 
